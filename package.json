@@ -11,5 +11,10 @@
     "start": "npm run build:core && npm run start -w mobile",
     "android": "npm run build:core && npm run android -w mobile",
     "ios": "npm run build:core && npm run ios -w mobile"
+  },
+  "overrides": {
+    "expo-status-bar": "3.0.9",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
   }
 }

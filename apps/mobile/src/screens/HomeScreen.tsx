@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -38,6 +39,7 @@ export function HomeScreen({ navigation }: Props) {
   );
   const [coordsLabel, setCoordsLabel] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [countryPickerOpen, setCountryPickerOpen] = useState(false);
 
   const countryLabel = useMemo(
     () => SUPPORTED_COUNTRIES.find((c) => c.code === countryCode)?.label ?? "",
@@ -134,29 +136,61 @@ export function HomeScreen({ navigation }: Props) {
 
       <Text style={styles.section}>Your location</Text>
       <Text style={styles.fieldLabel}>Country</Text>
-      <View style={styles.countryRow}>
-        {SUPPORTED_COUNTRIES.map((c) => {
-          const on = countryCode === c.code;
-          return (
-            <Pressable
-              key={c.code}
-              onPress={() => {
-                setCountryCode(c.code);
-                setCoords(null);
-                setCoordsLabel(null);
-              }}
-              style={[styles.countryChip, on && styles.countryChipOn]}
-            >
-              <Text
-                style={[styles.countryChipLabel, on && styles.countryChipLabelOn]}
-                numberOfLines={1}
-              >
-                {c.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <Pressable
+        style={styles.countrySelect}
+        onPress={() => setCountryPickerOpen(true)}
+        disabled={busy}
+      >
+        <Text style={styles.countrySelectText} numberOfLines={1}>
+          {countryLabel || "Select country"}
+        </Text>
+        <Text style={styles.countrySelectChevron}>▼</Text>
+      </Pressable>
+
+      <Modal
+        visible={countryPickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCountryPickerOpen(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setCountryPickerOpen(false)}
+            accessibilityLabel="Dismiss country picker"
+          />
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Country</Text>
+            {SUPPORTED_COUNTRIES.map((c) => {
+              const selected = countryCode === c.code;
+              return (
+                <Pressable
+                  key={c.code}
+                  style={[styles.modalRow, selected && styles.modalRowSelected]}
+                  onPress={() => {
+                    setCountryCode(c.code);
+                    setCoords(null);
+                    setCoordsLabel(null);
+                    setCountryPickerOpen(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.modalRowLabel,
+                      selected && styles.modalRowLabelSelected,
+                    ]}
+                  >
+                    {c.label}
+                  </Text>
+                  {selected ? (
+                    <Text style={styles.modalRowCheck}>✓</Text>
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      </Modal>
 
       <Text style={[styles.fieldLabel, styles.cityLabel]}>City</Text>
       <TextInput
@@ -258,23 +292,57 @@ const styles = StyleSheet.create({
   skillLabel: { color: "#cbd5e1", fontWeight: "600" },
   skillLabelOn: { color: "#0c1a24" },
   hint: { marginTop: 10, color: "#7a8f9f", fontSize: 14 },
-  countryRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  countryChip: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
+  countrySelect: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#132633",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: "#1f3a4d",
-    maxWidth: "48%",
-    flexGrow: 1,
   },
-  countryChipOn: {
-    backgroundColor: "#164e63",
-    borderColor: "#38bdf8",
+  countrySelectText: { color: "#e8f4ff", fontSize: 16, flex: 1, marginRight: 8 },
+  countrySelectChevron: { color: "#7dd3fc", fontSize: 10 },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    paddingHorizontal: 24,
   },
-  countryChipLabel: { color: "#cbd5e1", fontSize: 13, fontWeight: "600" },
-  countryChipLabelOn: { color: "#e0f2fe" },
+  modalCard: {
+    backgroundColor: "#132633",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#1f3a4d",
+    paddingVertical: 8,
+    maxHeight: "70%",
+    width: "100%",
+    alignSelf: "center",
+  },
+  modalTitle: {
+    color: "#7dd3fc",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  modalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#1f3a4d",
+  },
+  modalRowSelected: { backgroundColor: "#164e63" },
+  modalRowLabel: { color: "#e2e8f0", fontSize: 16, fontWeight: "600" },
+  modalRowLabelSelected: { color: "#e0f2fe" },
+  modalRowCheck: { color: "#38bdf8", fontSize: 18, fontWeight: "700" },
   cityInput: {
     backgroundColor: "#132633",
     borderRadius: 12,

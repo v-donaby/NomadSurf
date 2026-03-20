@@ -33,6 +33,15 @@ npm start            # runs `tsc` in packages/core first (prestart)
 
 Then open the project in **Expo Go** or press `i` / `a` for iOS Simulator / Android emulator.
 
+### Expo Go version mismatch
+
+The app targets **Expo SDK 54**, which matches the **Expo Go** build from the [App Store](https://apps.apple.com/app/expo-go/id982107779) / [Google Play](https://play.google.com/store/apps/details?id=host.exp.exponent). If you see a message that the project is incompatible with Expo Go:
+
+1. **Update Expo Go** on your phone to the latest version.
+2. From the repo root, run `npm install` so dependencies match (this monorepo pins `react` / `react-native` / `expo-status-bar` for SDK 54).
+
+If you intentionally use **SDK 55+** later, you need a **new enough** Expo Go (or a [development build](https://docs.expo.dev/develop/development-builds/introduction/)) that supports that SDK.
+
 ## Regenerate spot seed
 
 ```bash
