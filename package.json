@@ -1,0 +1,15 @@
+{
+  "name": "nomadsurf",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:core": "npm run build -w @nomadsurf/core",
+    "spots:generate": "node scripts/generate-spots.mjs",
+    "start": "npm run build:core && npm run start -w mobile",
+    "android": "npm run build:core && npm run android -w mobile",
+    "ios": "npm run build:core && npm run ios -w mobile"
+  }
+}
