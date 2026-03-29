@@ -38,10 +38,6 @@ export function HomeScreen({ navigation }: Props) {
   const [skill, setSkill] = useState<SkillLevel>("intermediate");
   const [countryCode, setCountryCode] = useState<SupportedCountryCode>("CO");
   const [selectedCity, setSelectedCity] = useState<PicklistCity | null>(null);
-  const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(
-    null
-  );
-  const [coordsLabel, setCoordsLabel] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
@@ -56,17 +52,12 @@ export function HomeScreen({ navigation }: Props) {
     [countryCode]
   );
 
-  const applyPicklistCity = useCallback(
-    (city: PicklistCity) => {
-      setSelectedCity(city);
-      setCoords({ lat: city.latitude, lon: city.longitude });
-      setCoordsLabel(`${city.label} · ${countryLabel}`);
-    },
-    [countryLabel]
-  );
+  const applyPicklistCity = useCallback((city: PicklistCity) => {
+    setSelectedCity(city);
+  }, []);
 
   const findSurf = useCallback(async () => {
-    if (!coords) {
+    if (!selectedCity) {
       Alert.alert(
         "Set your location",
         "Choose a country and a city from the lists."
@@ -76,8 +67,8 @@ export function HomeScreen({ navigation }: Props) {
     setBusy(true);
     try {
       const out = await computeRecommendation({
-        userLat: coords.lat,
-        userLon: coords.lon,
+        userLat: selectedCity.latitude,
+        userLon: selectedCity.longitude,
         skill,
         allSpots: spots,
       });
@@ -94,7 +85,7 @@ export function HomeScreen({ navigation }: Props) {
     } finally {
       setBusy(false);
     }
-  }, [coords, navigation, skill, spots]);
+  }, [navigation, selectedCity, skill, spots]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -177,8 +168,6 @@ export function HomeScreen({ navigation }: Props) {
                     onPress={() => {
                       setCountryCode(c.code);
                       setSelectedCity(null);
-                      setCoords(null);
-                      setCoordsLabel(null);
                       setCountryPickerOpen(false);
                     }}
                   >
@@ -278,18 +267,6 @@ export function HomeScreen({ navigation }: Props) {
           </View>
         </Modal>
 
-        {coords ? (
-          <Text style={styles.coords}>
-            Using: {coordsLabel}
-            {"\n"}
-            {coords.lat.toFixed(4)}, {coords.lon.toFixed(4)}
-          </Text>
-        ) : (
-          <Text style={styles.coordsMuted}>
-            Choose a country and city from the lists.
-          </Text>
-        )}
-
         <Pressable
           style={[styles.cta, busy && styles.btnDisabled]}
           onPress={findSurf}
@@ -303,8 +280,8 @@ export function HomeScreen({ navigation }: Props) {
         </Pressable>
 
         <Text style={styles.footer}>
-          City coordinates are preset for each place. Forecasts: Open-Meteo
-          marine + weather. Verify locally before paddling out.
+          Forecasts: Open-Meteo marine + weather. Verify locally before paddling
+          out.
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -461,14 +438,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
   },
-  coords: {
-    marginTop: 16,
-    color: colors.kicker,
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: "500",
-  },
-  coordsMuted: { marginTop: 16, color: colors.textSubtle, fontSize: 14 },
   cta: {
     marginTop: 30,
     backgroundColor: colors.cta,
