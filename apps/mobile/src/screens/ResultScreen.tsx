@@ -1,9 +1,10 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { SpotForecastResult } from "@nomadsurf/core";
 import type { RootStackParamList } from "../navigation/types";
+import { colors, radii, shadowCard } from "../theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Result">;
 
@@ -39,16 +40,21 @@ export function ResultScreen({ navigation, route }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.kicker}>Best spot today</Text>
-        <Text style={styles.spotName}>{best.spot.name}</Text>
-        {best.spot.region ? (
-          <Text style={styles.region}>{best.spot.region}</Text>
-        ) : null}
-        <Text style={styles.meta}>
-          ~{best.distanceKm.toFixed(0)} km away · Times are local to the break
-        </Text>
+    <SafeAreaView style={styles.safe} edges={["bottom"]}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.hero}>
+          <Text style={styles.kicker}>Best spot today</Text>
+          <Text style={styles.spotName}>{best.spot.name}</Text>
+          {best.spot.region ? (
+            <Text style={styles.region}>{best.spot.region}</Text>
+          ) : null}
+          <Text style={styles.meta}>
+            ~{best.distanceKm.toFixed(0)} km away · Local times at the break
+          </Text>
+        </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Best window</Text>
@@ -56,9 +62,24 @@ export function ResultScreen({ navigation, route }: Props) {
             {formatClock(best.bestWindow.startTime)} –{" "}
             {formatClock(best.bestWindow.endTime)}
           </Text>
+          <View style={styles.statRow}>
+            <View style={styles.statPill}>
+              <Text style={styles.statLabel}>Peak</Text>
+              <Text style={styles.statValue}>
+                {formatClock(best.bestWindow.peakTime)}
+              </Text>
+            </View>
+            <View style={styles.statPill}>
+              <Text style={styles.statLabel}>Swell</Text>
+              <Text style={styles.statValue}>~{swellFt} ft</Text>
+            </View>
+            <View style={styles.statPill}>
+              <Text style={styles.statLabel}>Period</Text>
+              <Text style={styles.statValue}>{period}s</Text>
+            </View>
+          </View>
           <Text style={styles.rationale}>
-            Peak around {formatClock(best.bestWindow.peakTime)} · ~{swellFt} ft
-            swell (sig.) · {period}s period
+            Significant swell height · verify conditions before you paddle out.
           </Text>
         </View>
 
@@ -89,83 +110,142 @@ export function ResultScreen({ navigation, route }: Props) {
           </View>
         ) : null}
 
-        <Text
-          style={styles.back}
+        <Pressable
+          style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
           onPress={() => navigation.navigate("Home")}
         >
-          ← Change location or skill
-        </Text>
+          <Text style={styles.backChevron}>‹</Text>
+          <Text style={styles.back}>Change location or skill</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0c1a24" },
-  scroll: { padding: 20, paddingBottom: 40 },
+  safe: { flex: 1, backgroundColor: colors.bgScreen },
+  scroll: { paddingHorizontal: 22, paddingTop: 8, paddingBottom: 40 },
+  hero: {
+    marginBottom: 8,
+  },
   kicker: {
-    color: "#7dd3fc",
-    fontSize: 12,
+    color: colors.kicker,
+    fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1.2,
+    letterSpacing: 1.4,
   },
   spotName: {
-    marginTop: 8,
-    fontSize: 28,
+    marginTop: 10,
+    fontSize: 30,
     fontWeight: "800",
-    color: "#f8fafc",
+    color: colors.text,
+    letterSpacing: -0.6,
   },
-  region: { marginTop: 4, color: "#94a3b8", fontSize: 16 },
-  meta: { marginTop: 10, color: "#7dd3fc", fontSize: 14 },
+  region: { marginTop: 6, color: colors.textMuted, fontSize: 16, fontWeight: "500" },
+  meta: { marginTop: 12, color: colors.accent, fontSize: 14, fontWeight: "500" },
   card: {
-    marginTop: 22,
-    backgroundColor: "#132633",
-    borderRadius: 16,
-    padding: 18,
+    marginTop: 20,
+    backgroundColor: colors.surfaceStrong,
+    borderRadius: radii.xl,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "#1f3a4d",
+    borderColor: colors.border,
+    ...shadowCard,
   },
   cardTitle: {
-    color: "#bae6fd",
-    fontSize: 12,
+    color: colors.kicker,
+    fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.4,
   },
   window: {
-    marginTop: 10,
-    fontSize: 26,
+    marginTop: 12,
+    fontSize: 28,
     fontWeight: "800",
-    color: "#fef3c7",
+    color: colors.cta,
+    letterSpacing: -0.5,
   },
-  rationale: { marginTop: 10, color: "#cbd5e1", fontSize: 15, lineHeight: 22 },
-  mapWrap: {
-    marginTop: 20,
-    height: 220,
-    borderRadius: 16,
-    overflow: "hidden",
+  statRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 16,
+  },
+  statPill: {
+    flex: 1,
+    minWidth: "28%",
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: "#1f3a4d",
+    borderColor: colors.border,
   },
-  map: { flex: 1 },
-  runners: { marginTop: 24 },
-  runnersTitle: {
-    color: "#e2e8f0",
+  statLabel: {
+    color: colors.textSubtle,
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  statValue: {
+    marginTop: 4,
+    color: colors.text,
     fontSize: 16,
     fontWeight: "700",
-    marginBottom: 10,
+  },
+  rationale: {
+    marginTop: 14,
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  mapWrap: {
+    marginTop: 22,
+    height: 228,
+    borderRadius: radii.xl,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.mapBorder,
+    ...shadowCard,
+  },
+  map: { flex: 1 },
+  runners: { marginTop: 26 },
+  runnersTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 12,
+    letterSpacing: -0.3,
   },
   runnerRow: {
-    paddingVertical: 10,
+    paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#1f3a4d",
+    borderBottomColor: colors.border,
   },
-  runnerName: { color: "#f1f5f9", fontSize: 16, fontWeight: "600" },
-  runnerWin: { color: "#94a3b8", fontSize: 14, marginTop: 4 },
-  back: {
+  runnerName: { color: colors.text, fontSize: 16, fontWeight: "600" },
+  runnerWin: { color: colors.textMuted, fontSize: 14, marginTop: 4, fontWeight: "500" },
+  backBtn: {
     marginTop: 28,
-    color: "#38bdf8",
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    paddingVertical: 10,
+    paddingRight: 12,
+    gap: 2,
+  },
+  backBtnPressed: { opacity: 0.65 },
+  backChevron: {
+    color: colors.accent,
+    fontSize: 28,
+    fontWeight: "300",
+    marginTop: -2,
+    marginRight: 2,
+  },
+  back: {
+    color: colors.accent,
     fontSize: 16,
     fontWeight: "600",
   },

@@ -5,14 +5,17 @@ import {
   Alert,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { SkillLevel } from "@nomadsurf/core";
-import { searchCityInCountry } from "../api/geocode";
+import {
+  citiesForCountry,
+  type PicklistCity,
+} from "../constants/citiesByCountry";
 import {
   SUPPORTED_COUNTRIES,
   type SupportedCountryCode,
@@ -20,6 +23,7 @@ import {
 import { computeRecommendation } from "../logic/recommendation";
 import type { RootStackParamList } from "../navigation/types";
 import { loadAllSpots } from "../spots/loadSpots";
+import { colors, radii, shadowCard, shadowCta } from "../theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -33,50 +37,39 @@ export function HomeScreen({ navigation }: Props) {
   const spots = useMemo(() => loadAllSpots(), []);
   const [skill, setSkill] = useState<SkillLevel>("intermediate");
   const [countryCode, setCountryCode] = useState<SupportedCountryCode>("CO");
-  const [city, setCity] = useState("");
+  const [selectedCity, setSelectedCity] = useState<PicklistCity | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(
     null
   );
   const [coordsLabel, setCoordsLabel] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
+  const [cityPickerOpen, setCityPickerOpen] = useState(false);
 
   const countryLabel = useMemo(
     () => SUPPORTED_COUNTRIES.find((c) => c.code === countryCode)?.label ?? "",
     [countryCode]
   );
 
-  const lookupLocation = useCallback(async () => {
-    const cityTrim = city.trim();
-    if (cityTrim.length < 2) {
-      Alert.alert("Enter a city", "Type at least 2 characters for the city name.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const hit = await searchCityInCountry(cityTrim, countryCode);
-      if (!hit) {
-        Alert.alert(
-          "Not found",
-          `No match for “${cityTrim}” in ${countryLabel}. Try another spelling or a larger nearby city.`
-        );
-        return;
-      }
-      setCoords({ lat: hit.latitude, lon: hit.longitude });
-      const region = hit.admin1 ? `${hit.name}, ${hit.admin1}` : hit.name;
-      setCoordsLabel(`${region} · ${hit.country ?? countryLabel}`);
-    } catch (e) {
-      Alert.alert("Lookup failed", String(e));
-    } finally {
-      setBusy(false);
-    }
-  }, [city, countryCode, countryLabel]);
+  const cityOptions = useMemo(
+    () => citiesForCountry(countryCode),
+    [countryCode]
+  );
+
+  const applyPicklistCity = useCallback(
+    (city: PicklistCity) => {
+      setSelectedCity(city);
+      setCoords({ lat: city.latitude, lon: city.longitude });
+      setCoordsLabel(`${city.label} · ${countryLabel}`);
+    },
+    [countryLabel]
+  );
 
   const findSurf = useCallback(async () => {
     if (!coords) {
       Alert.alert(
         "Set your location",
-        "Choose country and city, then tap Look up location."
+        "Choose a country and a city from the lists."
       );
       return;
     }
@@ -105,280 +98,391 @@ export function HomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <Text style={styles.title}>NomadSurf</Text>
-        <Text style={styles.sub}>
-          Pick your country and city — we match you to the best break in our
-          regional list and today’s best time (local to the spot).
-        </Text>
-      </View>
-
-      <Text style={styles.section}>Skill level</Text>
-      <View style={styles.skillRow}>
-        {SKILLS.map((s) => {
-          const on = skill === s.key;
-          return (
-            <Pressable
-              key={s.key}
-              onPress={() => setSkill(s.key)}
-              style={[styles.skillChip, on && styles.skillChipOn]}
-            >
-              <Text style={[styles.skillLabel, on && styles.skillLabelOn]}>
-                {s.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      <Text style={styles.hint}>
-        {SKILLS.find((x) => x.key === skill)?.hint}
-      </Text>
-
-      <Text style={styles.section}>Your location</Text>
-      <Text style={styles.fieldLabel}>Country</Text>
-      <Pressable
-        style={styles.countrySelect}
-        onPress={() => setCountryPickerOpen(true)}
-        disabled={busy}
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <Text style={styles.countrySelectText} numberOfLines={1}>
-          {countryLabel || "Select country"}
-        </Text>
-        <Text style={styles.countrySelectChevron}>▼</Text>
-      </Pressable>
+        <View style={styles.header}>
+          <View style={styles.titleRow}>
+            <View style={styles.titleAccent} />
+            <Text style={styles.title}>NomadSurf</Text>
+          </View>
+          <Text style={styles.sub}>
+            Pick your country and city from the lists — we match you to the best
+            break in our regional list and today’s best time (local to the spot).
+          </Text>
+        </View>
 
-      <Modal
-        visible={countryPickerOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setCountryPickerOpen(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={() => setCountryPickerOpen(false)}
-            accessibilityLabel="Dismiss country picker"
-          />
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Country</Text>
-            {SUPPORTED_COUNTRIES.map((c) => {
-              const selected = countryCode === c.code;
+        <Text style={styles.section}>Skill level</Text>
+        <View style={styles.skillShell}>
+          <View style={styles.skillRow}>
+            {SKILLS.map((s) => {
+              const on = skill === s.key;
               return (
                 <Pressable
-                  key={c.code}
-                  style={[styles.modalRow, selected && styles.modalRowSelected]}
-                  onPress={() => {
-                    setCountryCode(c.code);
-                    setCoords(null);
-                    setCoordsLabel(null);
-                    setCountryPickerOpen(false);
-                  }}
+                  key={s.key}
+                  onPress={() => setSkill(s.key)}
+                  style={({ pressed }) => [
+                    styles.skillChip,
+                    on && styles.skillChipOn,
+                    pressed && !on && styles.skillChipPressed,
+                  ]}
                 >
-                  <Text
-                    style={[
-                      styles.modalRowLabel,
-                      selected && styles.modalRowLabelSelected,
-                    ]}
-                  >
-                    {c.label}
+                  <Text style={[styles.skillLabel, on && styles.skillLabelOn]}>
+                    {s.label}
                   </Text>
-                  {selected ? (
-                    <Text style={styles.modalRowCheck}>✓</Text>
-                  ) : null}
                 </Pressable>
               );
             })}
           </View>
         </View>
-      </Modal>
-
-      <Text style={[styles.fieldLabel, styles.cityLabel]}>City</Text>
-      <TextInput
-        style={styles.cityInput}
-        placeholder="e.g. Cartagena, San José, Rio de Janeiro"
-        placeholderTextColor="#6b7a85"
-        value={city}
-        onChangeText={(t) => {
-          setCity(t);
-          setCoords(null);
-          setCoordsLabel(null);
-        }}
-        autoCapitalize="words"
-        editable={!busy}
-        onSubmitEditing={lookupLocation}
-        returnKeyType="search"
-      />
-
-      <Pressable
-        style={[styles.lookupBtn, busy && styles.btnDisabled]}
-        onPress={lookupLocation}
-        disabled={busy}
-      >
-        <Text style={styles.lookupBtnText}>Look up location</Text>
-      </Pressable>
-
-      {coords ? (
-        <Text style={styles.coords}>
-          Using: {coordsLabel}
-          {"\n"}
-          {coords.lat.toFixed(4)}, {coords.lon.toFixed(4)}
+        <Text style={styles.hint}>
+          {SKILLS.find((x) => x.key === skill)?.hint}
         </Text>
-      ) : (
-        <Text style={styles.coordsMuted}>
-          Choose country, enter city, then look up.
-        </Text>
-      )}
 
-      <Pressable
-        style={[styles.cta, busy && styles.btnDisabled]}
-        onPress={findSurf}
-        disabled={busy}
-      >
-        {busy ? (
-          <ActivityIndicator color="#0a1628" />
+        <Text style={styles.section}>Your location</Text>
+        <Text style={styles.fieldLabel}>Country</Text>
+        <Pressable
+          style={styles.countrySelect}
+          onPress={() => setCountryPickerOpen(true)}
+          disabled={busy}
+        >
+          <Text style={styles.countrySelectText} numberOfLines={1}>
+            {countryLabel || "Select country"}
+          </Text>
+          <Text style={styles.countrySelectChevron}>▼</Text>
+        </Pressable>
+
+        <Modal
+          visible={countryPickerOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCountryPickerOpen(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={() => setCountryPickerOpen(false)}
+              accessibilityLabel="Dismiss country picker"
+            />
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Country</Text>
+              {SUPPORTED_COUNTRIES.map((c) => {
+                const selected = countryCode === c.code;
+                return (
+                  <Pressable
+                    key={c.code}
+                    style={[styles.modalRow, selected && styles.modalRowSelected]}
+                    onPress={() => {
+                      setCountryCode(c.code);
+                      setSelectedCity(null);
+                      setCoords(null);
+                      setCoordsLabel(null);
+                      setCountryPickerOpen(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.modalRowLabel,
+                        selected && styles.modalRowLabelSelected,
+                      ]}
+                    >
+                      {c.label}
+                    </Text>
+                    {selected ? (
+                      <Text style={styles.modalRowCheck}>✓</Text>
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </Modal>
+
+        <Text style={[styles.fieldLabel, styles.cityLabel]}>City</Text>
+        <Pressable
+          style={styles.countrySelect}
+          onPress={() => setCityPickerOpen(true)}
+          disabled={busy}
+        >
+          <Text
+            style={[
+              styles.countrySelectText,
+              !selectedCity && styles.countrySelectPlaceholder,
+            ]}
+            numberOfLines={1}
+          >
+            {selectedCity?.label ?? "Select city"}
+          </Text>
+          <Text style={styles.countrySelectChevron}>▼</Text>
+        </Pressable>
+
+        <Modal
+          visible={cityPickerOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCityPickerOpen(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={() => setCityPickerOpen(false)}
+              accessibilityLabel="Dismiss city picker"
+            />
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>City · {countryLabel}</Text>
+              <ScrollView
+                style={styles.cityModalScroll}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+              >
+                {cityOptions.map((c) => {
+                  const selected = selectedCity?.id === c.id;
+                  return (
+                    <Pressable
+                      key={c.id}
+                      style={[
+                        styles.modalRow,
+                        selected && styles.modalRowSelected,
+                      ]}
+                      onPress={() => {
+                        applyPicklistCity(c);
+                        setCityPickerOpen(false);
+                      }}
+                    >
+                      <View style={styles.modalCityTextBlock}>
+                        <Text
+                          style={[
+                            styles.modalRowLabel,
+                            selected && styles.modalRowLabelSelected,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {c.label}
+                        </Text>
+                        {c.subtitle ? (
+                          <Text style={styles.modalCitySub} numberOfLines={1}>
+                            {c.subtitle}
+                          </Text>
+                        ) : null}
+                      </View>
+                      {selected ? (
+                        <Text style={styles.modalRowCheck}>✓</Text>
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+        {coords ? (
+          <Text style={styles.coords}>
+            Using: {coordsLabel}
+            {"\n"}
+            {coords.lat.toFixed(4)}, {coords.lon.toFixed(4)}
+          </Text>
         ) : (
-          <Text style={styles.ctaText}>Find best surf today</Text>
+          <Text style={styles.coordsMuted}>
+            Choose a country and city from the lists.
+          </Text>
         )}
-      </Pressable>
 
-      <View style={styles.spacer} />
+        <Pressable
+          style={[styles.cta, busy && styles.btnDisabled]}
+          onPress={findSurf}
+          disabled={busy}
+        >
+          {busy ? (
+            <ActivityIndicator color={colors.ctaText} />
+          ) : (
+            <Text style={styles.ctaText}>Find best surf today</Text>
+          )}
+        </Pressable>
 
-      <Text style={styles.footer}>
-        Location: Open-Meteo geocoding (city in selected country). Forecasts:
-        Open-Meteo marine + weather. Verify locally before paddling out.
-      </Text>
+        <Text style={styles.footer}>
+          City coordinates are preset for each place. Forecasts: Open-Meteo
+          marine + weather. Verify locally before paddling out.
+        </Text>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0c1a24", paddingHorizontal: 20 },
-  header: { marginBottom: 20 },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#e8f4ff",
-    letterSpacing: 0.5,
+  safe: { flex: 1, backgroundColor: colors.bgScreen },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 22,
+    paddingTop: 6,
+    paddingBottom: 28,
   },
-  sub: { marginTop: 8, color: "#9db3c4", fontSize: 15, lineHeight: 22 },
+  header: { marginBottom: 26 },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  titleAccent: {
+    width: 4,
+    height: 28,
+    borderRadius: 2,
+    backgroundColor: colors.accent,
+  },
+  title: {
+    fontSize: 34,
+    fontWeight: "800",
+    color: colors.text,
+    letterSpacing: -0.8,
+  },
+  sub: {
+    marginTop: 12,
+    color: colors.textMuted,
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: "400",
+  },
   section: {
-    color: "#7dd3fc",
-    fontSize: 13,
-    fontWeight: "600",
+    color: colors.kicker,
+    fontSize: 11,
+    fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 10,
-    marginTop: 8,
+    letterSpacing: 1.4,
+    marginBottom: 12,
+    marginTop: 4,
   },
   fieldLabel: {
-    color: "#94a3b8",
+    color: colors.textMuted,
     fontSize: 13,
+    fontWeight: "500",
     marginBottom: 8,
   },
-  cityLabel: { marginTop: 16 },
-  skillRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  skillChip: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 999,
-    backgroundColor: "#132633",
+  cityLabel: { marginTop: 18 },
+  skillShell: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: "#1f3a4d",
+    borderColor: colors.border,
+    padding: 5,
+    ...shadowCard,
   },
+  skillRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  skillChip: {
+    paddingVertical: 11,
+    paddingHorizontal: 15,
+    borderRadius: radii.md,
+    backgroundColor: "transparent",
+  },
+  skillChipPressed: { backgroundColor: colors.surfaceHover },
   skillChipOn: {
-    backgroundColor: "#38bdf8",
-    borderColor: "#7dd3fc",
+    backgroundColor: colors.accent,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  skillLabel: { color: "#cbd5e1", fontWeight: "600" },
-  skillLabelOn: { color: "#0c1a24" },
-  hint: { marginTop: 10, color: "#7a8f9f", fontSize: 14 },
+  skillLabel: {
+    color: colors.textSecondary,
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  skillLabelOn: { color: colors.accentTextOn },
+  hint: { marginTop: 12, color: colors.textSubtle, fontSize: 14, lineHeight: 20 },
   countrySelect: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#132633",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    backgroundColor: colors.surfaceStrong,
+    borderRadius: radii.md,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
     borderWidth: 1,
-    borderColor: "#1f3a4d",
+    borderColor: colors.border,
   },
-  countrySelectText: { color: "#e8f4ff", fontSize: 16, flex: 1, marginRight: 8 },
-  countrySelectChevron: { color: "#7dd3fc", fontSize: 10 },
+  countrySelectText: {
+    color: colors.text,
+    fontSize: 16,
+    flex: 1,
+    marginRight: 8,
+    fontWeight: "500",
+  },
+  countrySelectPlaceholder: {
+    color: colors.textSubtle,
+    fontWeight: "400",
+  },
+  countrySelectChevron: {
+    color: colors.accent,
+    fontSize: 11,
+    opacity: 0.9,
+  },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: colors.overlay,
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 22,
   },
   modalCard: {
-    backgroundColor: "#132633",
-    borderRadius: 16,
+    backgroundColor: "#0f1419",
+    borderRadius: radii.xl,
     borderWidth: 1,
-    borderColor: "#1f3a4d",
-    paddingVertical: 8,
-    maxHeight: "70%",
+    borderColor: colors.border,
+    paddingVertical: 6,
+    maxHeight: "72%",
     width: "100%",
     alignSelf: "center",
+    ...shadowCard,
   },
   modalTitle: {
-    color: "#7dd3fc",
-    fontSize: 12,
+    color: colors.kicker,
+    fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    letterSpacing: 1.4,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
   },
   modalRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 15,
+    paddingHorizontal: 18,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#1f3a4d",
+    borderTopColor: colors.border,
   },
-  modalRowSelected: { backgroundColor: "#164e63" },
-  modalRowLabel: { color: "#e2e8f0", fontSize: 16, fontWeight: "600" },
-  modalRowLabelSelected: { color: "#e0f2fe" },
-  modalRowCheck: { color: "#38bdf8", fontSize: 18, fontWeight: "700" },
-  cityInput: {
-    backgroundColor: "#132633",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: "#e8f4ff",
-    borderWidth: 1,
-    borderColor: "#1f3a4d",
-    fontSize: 16,
+  modalRowSelected: { backgroundColor: colors.accentSoft },
+  modalRowLabel: { color: colors.textSecondary, fontSize: 16, fontWeight: "600" },
+  modalRowLabelSelected: { color: colors.text },
+  modalRowCheck: { color: colors.accent, fontSize: 18, fontWeight: "700" },
+  cityModalScroll: { maxHeight: 420 },
+  modalCityTextBlock: { flex: 1, marginRight: 10, minWidth: 0 },
+  modalCitySub: {
+    marginTop: 3,
+    color: colors.textSubtle,
+    fontSize: 13,
+    fontWeight: "500",
   },
-  lookupBtn: {
-    marginTop: 12,
-    backgroundColor: "#1e293b",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#334155",
+  coords: {
+    marginTop: 16,
+    color: colors.kicker,
+    fontSize: 14,
+    lineHeight: 21,
+    fontWeight: "500",
   },
-  lookupBtnText: { color: "#e2e8f0", fontWeight: "700", fontSize: 16 },
-  coords: { marginTop: 14, color: "#bae6fd", fontSize: 14, lineHeight: 20 },
-  coordsMuted: { marginTop: 14, color: "#5c6f7e", fontSize: 14 },
+  coordsMuted: { marginTop: 16, color: colors.textSubtle, fontSize: 14 },
   cta: {
-    marginTop: 28,
-    backgroundColor: "#fbbf24",
-    paddingVertical: 16,
-    borderRadius: 14,
+    marginTop: 30,
+    backgroundColor: colors.cta,
+    paddingVertical: 17,
+    borderRadius: radii.lg,
     alignItems: "center",
+    ...shadowCta,
   },
-  ctaText: { color: "#0c1a24", fontWeight: "800", fontSize: 17 },
-  btnDisabled: { opacity: 0.55 },
-  spacer: { flex: 1, minHeight: 20 },
+  ctaText: { color: colors.ctaText, fontWeight: "800", fontSize: 17, letterSpacing: -0.2 },
+  btnDisabled: { opacity: 0.5 },
   footer: {
-    marginBottom: 12,
-    color: "#5c6f7e",
+    marginTop: 32,
+    color: colors.textSubtle,
     fontSize: 11,
-    lineHeight: 16,
+    lineHeight: 17,
   },
 });

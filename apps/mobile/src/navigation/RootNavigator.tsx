@@ -1,8 +1,10 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { Platform } from "react-native";
 import type { RootStackParamList } from "./types";
 import { HomeScreen } from "../screens/HomeScreen";
 import { ResultScreen } from "../screens/ResultScreen";
+import { colors } from "../theme";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -11,10 +13,20 @@ export function RootNavigator() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: "#0c1a24" },
-          headerTintColor: "#e8f4ff",
-          headerTitleStyle: { fontWeight: "700" },
-          contentStyle: { backgroundColor: "#0c1a24" },
+          headerStyle: Platform.select({
+            ios: { backgroundColor: "transparent" },
+            default: { backgroundColor: colors.bgScreen },
+          }),
+          headerTransparent: Platform.OS === "ios",
+          headerBlurEffect: Platform.OS === "ios" ? "dark" : undefined,
+          headerTintColor: colors.text,
+          headerTitleStyle: {
+            fontWeight: "800",
+            fontSize: 17,
+            color: colors.text,
+          },
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: colors.bgScreen },
         }}
       >
         <Stack.Screen
