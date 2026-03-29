@@ -26,8 +26,10 @@ import type { RootStackParamList } from "../navigation/types";
 import { loadAllSpots } from "../spots/loadSpots";
 import {
   colors,
+  gradientCardWash,
   gradientCoastal,
   gradientScreen,
+  gradientWindowBar,
   radii,
   shadowCard,
   shadowCta,
@@ -39,6 +41,12 @@ const SKILLS: { key: SkillLevel; label: string; hint: string }[] = [
   { key: "beginner", label: "Beginner", hint: "Smaller, gentler conditions" },
   { key: "intermediate", label: "Intermediate", hint: "Moderate swell" },
   { key: "advanced", label: "Advanced", hint: "Larger, more powerful swell" },
+];
+
+const TODAY_STATS: [string, string][] = [
+  ["Wave", "3–5 ft"],
+  ["Wind", "Offshore"],
+  ["Water", "79°F"],
 ];
 
 export function HomeScreen({ navigation }: Props) {
@@ -154,6 +162,56 @@ export function HomeScreen({ navigation }: Props) {
                 🌊
               </Text>
             </Pressable>
+          </View>
+
+          <View style={styles.pickCard}>
+            <LinearGradient
+              colors={[...gradientCardWash]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.pickCardBody}>
+              <View style={styles.pickTopRow}>
+                <View style={styles.pickTitleBlock}>
+                  <Text style={styles.pickKicker}>{"Today's pick"}</Text>
+                  <Text style={styles.pickSpot}>Encuentro</Text>
+                  <Text style={styles.pickSubline}>
+                    Cabarete, Dominican Republic
+                  </Text>
+                </View>
+                <View style={styles.scoreBadge}>
+                  <Text style={styles.scoreLabel}>Surf score</Text>
+                  <Text style={styles.scoreValue}>92</Text>
+                </View>
+              </View>
+              <View style={styles.statGrid}>
+                {TODAY_STATS.map(([label, value]) => (
+                  <View key={label} style={styles.statCell}>
+                    <Text style={styles.statCellLabel}>{label}</Text>
+                    <Text style={styles.statCellValue}>{value}</Text>
+                  </View>
+                ))}
+              </View>
+              <View style={styles.windowPanel}>
+                <View style={styles.windowRow}>
+                  <Text style={styles.windowRowMuted}>Best window</Text>
+                  <Text style={styles.windowRowAccent}>7:15 AM – 9:00 AM</Text>
+                </View>
+                <View style={styles.windowTrack}>
+                  <LinearGradient
+                    colors={[...gradientWindowBar]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={styles.windowFill}
+                  />
+                </View>
+                <Text style={styles.windowBlurb}>
+                  Clean morning conditions with light offshore wind and mid tide.
+                  Great match for intermediate travelers.
+                </Text>
+              </View>
+            </View>
           </View>
 
           <View style={styles.tripCard}>
@@ -403,8 +461,134 @@ const styles = StyleSheet.create({
   },
   waveBtnPressed: { opacity: 0.88 },
   waveEmoji: { fontSize: 22 },
-  tripCard: {
+  pickCard: {
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    overflow: "hidden",
+    marginBottom: 24,
+    ...shadowCard,
+  },
+  pickCardBody: {
+    padding: 20,
+    zIndex: 1,
+  },
+  pickTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+  pickTitleBlock: { flex: 1, minWidth: 0 },
+  pickKicker: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.cyanKicker,
+    textTransform: "uppercase",
+    letterSpacing: 2.6,
+  },
+  pickSpot: {
+    marginTop: 8,
+    fontSize: 24,
+    fontWeight: "600",
+    color: colors.text,
+    letterSpacing: -0.4,
+  },
+  pickSubline: {
+    marginTop: 4,
+    fontSize: 14,
+    color: colors.textSlate300,
+    fontWeight: "400",
+  },
+  scoreBadge: {
+    borderRadius: radii.md,
+    backgroundColor: colors.badgeSurf,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: "flex-end",
+  },
+  scoreLabel: {
+    fontSize: 11,
+    color: colors.badgeSurfLabel,
+    fontWeight: "500",
+  },
+  scoreValue: {
+    marginTop: 2,
+    fontSize: 22,
+    fontWeight: "600",
+    color: colors.badgeSurfText,
+  },
+  statGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
     marginTop: 20,
+  },
+  statCell: {
+    flex: 1,
+    minWidth: "28%",
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: colors.statInset,
+    padding: 12,
+  },
+  statCellLabel: {
+    fontSize: 11,
+    color: colors.textSubtle,
+    fontWeight: "500",
+  },
+  statCellValue: {
+    marginTop: 4,
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  windowPanel: {
+    marginTop: 20,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceInner,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  windowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  windowRowMuted: {
+    fontSize: 14,
+    color: colors.textSlate300,
+    fontWeight: "400",
+  },
+  windowRowAccent: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.cyanSoft,
+  },
+  windowTrack: {
+    marginTop: 12,
+    height: 8,
+    borderRadius: radii.full,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    overflow: "hidden",
+  },
+  windowFill: {
+    width: "66%",
+    height: "100%",
+    borderRadius: radii.full,
+  },
+  windowBlurb: {
+    marginTop: 12,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.textSlate300,
+    fontWeight: "400",
+  },
+  tripCard: {
+    marginTop: 0,
     marginBottom: 24,
     borderRadius: radii.xl,
     borderWidth: 1,

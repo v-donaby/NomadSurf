@@ -41,6 +41,13 @@ export const colors = {
 /** Simulates reference radial (lighter at top): #234b63 → #102534 → #07131d */
 export const gradientScreen = ["#234b63", "#102534", "#07131d"] as const;
 
+/** Featured “Today’s pick” card wash: cyan / transparent / warm */
+export const gradientCardWash = [
+  "rgba(103, 232, 249, 0.12)",
+  "rgba(255, 255, 255, 0.02)",
+  "rgba(253, 186, 116, 0.12)",
+] as const;
+
 /** Best-window bar: cyan-300 → sky-300 → orange-200 */
 export const gradientWindowBar = ["#67e8f9", "#7dd3fc", "#fdba74"] as const;
 

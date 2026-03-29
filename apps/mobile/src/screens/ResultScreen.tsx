@@ -150,21 +150,6 @@ export function ResultScreen({ navigation, route }: Props) {
           </MapView>
         </View>
 
-        {best.runnerUps && best.runnerUps.length > 0 ? (
-          <View style={styles.runners}>
-            <Text style={styles.runnersTitle}>Also strong today</Text>
-            {best.runnerUps.map((r) => (
-              <View key={r.spot.id} style={styles.runnerRow}>
-                <Text style={styles.runnerName}>{r.spot.name}</Text>
-                <Text style={styles.runnerWin}>
-                  {formatClock(r.bestWindow.startTime)} –{" "}
-                  {formatClock(r.bestWindow.endTime)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
-
         <Pressable
           style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
           onPress={() => navigation.navigate("Home")}
@@ -315,21 +300,6 @@ const styles = StyleSheet.create({
     ...shadowCard,
   },
   map: { flex: 1 },
-  runners: { marginTop: 26 },
-  runnersTitle: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: "600",
-    marginBottom: 12,
-    letterSpacing: -0.3,
-  },
-  runnerRow: {
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  runnerName: { color: colors.text, fontSize: 16, fontWeight: "600" },
-  runnerWin: { color: colors.textMuted, fontSize: 14, marginTop: 4, fontWeight: "500" },
   backBtn: {
     marginTop: 28,
     flexDirection: "row",
