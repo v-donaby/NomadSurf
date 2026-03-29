@@ -15,8 +15,6 @@ export const colors = {
   statInset: "rgba(0, 0, 0, 0.1)",
   border: "rgba(255, 255, 255, 0.1)",
   borderGlass: "rgba(255, 255, 255, 0.1)",
-  borderCyan: "rgba(165, 243, 252, 0.1)",
-  borderOrange: "rgba(254, 215, 170, 0.1)",
   borderFocus: "rgba(165, 243, 252, 0.45)",
   text: "#ffffff",
   textSecondary: "#e2e8f0",
@@ -26,7 +24,6 @@ export const colors = {
   cyanBrand: "rgba(165, 243, 252, 0.7)",
   cyanKicker: "rgba(207, 250, 254, 0.7)",
   cyanSoft: "rgba(207, 250, 254, 0.95)",
-  chipText: "rgba(236, 254, 255, 0.9)",
   accent: "#a5f3fc",
   accentSoft: "rgba(165, 243, 252, 0.12)",
   accentTextOn: "#07131d",
@@ -39,31 +36,16 @@ export const colors = {
   ctaText: "#07131d",
   overlay: "rgba(2, 12, 27, 0.75)",
   mapBorder: "rgba(255, 255, 255, 0.1)",
-  orangeKicker: "rgba(255, 237, 213, 0.7)",
 };
 
 /** Simulates reference radial (lighter at top): #234b63 → #102534 → #07131d */
 export const gradientScreen = ["#234b63", "#102534", "#07131d"] as const;
-
-/** Featured card wash: cyan / transparent / warm */
-export const gradientCardWash = [
-  "rgba(103, 232, 249, 0.12)",
-  "rgba(255, 255, 255, 0.02)",
-  "rgba(253, 186, 116, 0.12)",
-] as const;
 
 /** Best-window bar: cyan-300 → sky-300 → orange-200 */
 export const gradientWindowBar = ["#67e8f9", "#7dd3fc", "#fdba74"] as const;
 
 /** Primary CTA / emphasis strip */
 export const gradientCoastal = ["#38bdf8", "#fcd9bd"] as const;
-
-/** Footer “theme” panel: sand → frost → cyan */
-export const gradientFooterPanel = [
-  "rgba(254, 215, 170, 0.15)",
-  "rgba(255, 255, 255, 0.1)",
-  "rgba(165, 243, 252, 0.1)",
-] as const;
 
 export const radii = {
   sm: 12,
