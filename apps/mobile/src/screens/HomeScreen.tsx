@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -52,12 +52,27 @@ export function HomeScreen({ navigation }: Props) {
     [countryCode]
   );
 
+  /** Always use the row from the current country list so coords match the open dropdown. */
+  const resolvedPicklistCity = useMemo(() => {
+    if (!selectedCity) return null;
+    return cityOptions.find((c) => c.id === selectedCity.id) ?? null;
+  }, [selectedCity, cityOptions]);
+
+  useEffect(() => {
+    if (
+      selectedCity != null &&
+      !cityOptions.some((c) => c.id === selectedCity.id)
+    ) {
+      setSelectedCity(null);
+    }
+  }, [selectedCity, cityOptions]);
+
   const applyPicklistCity = useCallback((city: PicklistCity) => {
     setSelectedCity(city);
   }, []);
 
   const findSurf = useCallback(async () => {
-    if (!selectedCity) {
+    if (!resolvedPicklistCity) {
       Alert.alert(
         "Set your location",
         "Choose a country and a city from the lists."
@@ -67,8 +82,8 @@ export function HomeScreen({ navigation }: Props) {
     setBusy(true);
     try {
       const out = await computeRecommendation({
-        userLat: selectedCity.latitude,
-        userLon: selectedCity.longitude,
+        userLat: resolvedPicklistCity.latitude,
+        userLon: resolvedPicklistCity.longitude,
         skill,
         allSpots: spots,
       });
@@ -79,13 +94,22 @@ export function HomeScreen({ navigation }: Props) {
         );
         return;
       }
-      navigation.navigate("Result", { best: out.best });
+      navigation.navigate("Result", {
+        best: out.best,
+        referenceLocation: {
+          label: resolvedPicklistCity.label,
+          subtitle: resolvedPicklistCity.subtitle,
+          countryLabel: countryLabel,
+          latitude: resolvedPicklistCity.latitude,
+          longitude: resolvedPicklistCity.longitude,
+        },
+      });
     } catch (e) {
       Alert.alert("Error", String(e));
     } finally {
       setBusy(false);
     }
-  }, [navigation, selectedCity, skill, spots]);
+  }, [countryLabel, navigation, resolvedPicklistCity, skill, spots]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -198,11 +222,11 @@ export function HomeScreen({ navigation }: Props) {
           <Text
             style={[
               styles.countrySelectText,
-              !selectedCity && styles.countrySelectPlaceholder,
+              !resolvedPicklistCity && styles.countrySelectPlaceholder,
             ]}
             numberOfLines={1}
           >
-            {selectedCity?.label ?? "Select city"}
+            {resolvedPicklistCity?.label ?? "Select city"}
           </Text>
           <Text style={styles.countrySelectChevron}>▼</Text>
         </Pressable>
@@ -227,7 +251,7 @@ export function HomeScreen({ navigation }: Props) {
                 nestedScrollEnabled
               >
                 {cityOptions.map((c) => {
-                  const selected = selectedCity?.id === c.id;
+                  const selected = resolvedPicklistCity?.id === c.id;
                   return (
                     <Pressable
                       key={c.id}

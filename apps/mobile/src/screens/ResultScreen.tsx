@@ -29,15 +29,30 @@ function peakHour(best: SpotForecastResult["bestWindow"]): {
   return { swellFt: ft, period: p };
 }
 
-export function ResultScreen({ navigation, route }: Props) {
-  const { best } = route.params;
-  const { swellFt, period } = peakHour(best.bestWindow);
-  const region = {
-    latitude: best.spot.latitude,
-    longitude: best.spot.longitude,
-    latitudeDelta: 0.12,
-    longitudeDelta: 0.12,
+function mapRegionForReferenceAndSpot(
+  ref: { latitude: number; longitude: number },
+  spot: { latitude: number; longitude: number }
+) {
+  const latMin = Math.min(ref.latitude, spot.latitude);
+  const latMax = Math.max(ref.latitude, spot.latitude);
+  const lonMin = Math.min(ref.longitude, spot.longitude);
+  const lonMax = Math.max(ref.longitude, spot.longitude);
+  const midLat = (latMin + latMax) / 2;
+  const midLon = (lonMin + lonMax) / 2;
+  const latSpan = Math.max(latMax - latMin, 1e-5);
+  const lonSpan = Math.max(lonMax - lonMin, 1e-5);
+  return {
+    latitude: midLat,
+    longitude: midLon,
+    latitudeDelta: Math.max(latSpan * 1.55, 0.09),
+    longitudeDelta: Math.max(lonSpan * 1.55, 0.09),
   };
+}
+
+export function ResultScreen({ navigation, route }: Props) {
+  const { best, referenceLocation } = route.params;
+  const { swellFt, period } = peakHour(best.bestWindow);
+  const region = mapRegionForReferenceAndSpot(referenceLocation, best.spot);
 
   return (
     <SafeAreaView style={styles.safe} edges={["bottom"]}>
@@ -47,12 +62,20 @@ export function ResultScreen({ navigation, route }: Props) {
       >
         <View style={styles.hero}>
           <Text style={styles.kicker}>Best spot today</Text>
+          <Text style={styles.refLine}>
+            From {referenceLocation.label}
+            {referenceLocation.subtitle
+              ? ` · ${referenceLocation.subtitle}`
+              : ""}
+            , {referenceLocation.countryLabel}
+          </Text>
           <Text style={styles.spotName}>{best.spot.name}</Text>
           {best.spot.region ? (
             <Text style={styles.region}>{best.spot.region}</Text>
           ) : null}
           <Text style={styles.meta}>
-            ~{best.distanceKm.toFixed(0)} km away · Local times at the break
+            ~{best.distanceKm.toFixed(0)} km from your pick to this break ·
+            Local times at the break
           </Text>
         </View>
 
@@ -85,6 +108,15 @@ export function ResultScreen({ navigation, route }: Props) {
 
         <View style={styles.mapWrap}>
           <MapView style={styles.map} initialRegion={region}>
+            <Marker
+              coordinate={{
+                latitude: referenceLocation.latitude,
+                longitude: referenceLocation.longitude,
+              }}
+              title={`Your pick: ${referenceLocation.label}`}
+              description={referenceLocation.countryLabel}
+              pinColor="blue"
+            />
             <Marker
               coordinate={{
                 latitude: best.spot.latitude,
@@ -136,14 +168,21 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
   },
   spotName: {
-    marginTop: 10,
+    marginTop: 14,
     fontSize: 30,
     fontWeight: "800",
     color: colors.text,
     letterSpacing: -0.6,
   },
   region: { marginTop: 6, color: colors.textMuted, fontSize: 16, fontWeight: "500" },
-  meta: { marginTop: 12, color: colors.accent, fontSize: 14, fontWeight: "500" },
+  refLine: {
+    marginTop: 10,
+    color: colors.textMuted,
+    fontSize: 15,
+    fontWeight: "600",
+    lineHeight: 22,
+  },
+  meta: { marginTop: 10, color: colors.accent, fontSize: 14, fontWeight: "500" },
   card: {
     marginTop: 20,
     backgroundColor: colors.surfaceStrong,
