@@ -1,10 +1,11 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { SpotForecastResult } from "@nomadsurf/core";
 import type { RootStackParamList } from "../navigation/types";
-import { colors, radii, shadowCard } from "../theme";
+import { colors, gradientCoastal, radii, shadowCard } from "../theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Result">;
 
@@ -85,25 +86,35 @@ export function ResultScreen({ navigation, route }: Props) {
             {formatClock(best.bestWindow.startTime)} –{" "}
             {formatClock(best.bestWindow.endTime)}
           </Text>
-          <View style={styles.statRow}>
-            <View style={styles.statPill}>
-              <Text style={styles.statLabel}>Peak</Text>
-              <Text style={styles.statValue}>
-                {formatClock(best.bestWindow.peakTime)}
-              </Text>
-            </View>
-            <View style={styles.statPill}>
-              <Text style={styles.statLabel}>Swell</Text>
-              <Text style={styles.statValue}>~{swellFt} ft</Text>
-            </View>
-            <View style={styles.statPill}>
-              <Text style={styles.statLabel}>Period</Text>
-              <Text style={styles.statValue}>{period}s</Text>
-            </View>
+          <View style={styles.windowBarTrack}>
+            <LinearGradient
+              colors={[...gradientCoastal]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.windowBarFill}
+            />
           </View>
-          <Text style={styles.rationale}>
-            Significant swell height · verify conditions before you paddle out.
-          </Text>
+          <View style={styles.cardInner}>
+            <View style={styles.statRow}>
+              <View style={styles.statPill}>
+                <Text style={styles.statLabel}>Peak</Text>
+                <Text style={styles.statValue}>
+                  {formatClock(best.bestWindow.peakTime)}
+                </Text>
+              </View>
+              <View style={styles.statPill}>
+                <Text style={styles.statLabel}>Swell</Text>
+                <Text style={styles.statValue}>~{swellFt} ft</Text>
+              </View>
+              <View style={styles.statPill}>
+                <Text style={styles.statLabel}>Period</Text>
+                <Text style={styles.statValue}>{period}s</Text>
+              </View>
+            </View>
+            <Text style={styles.rationale}>
+              Significant swell height · verify conditions before you paddle out.
+            </Text>
+          </View>
         </View>
 
         <View style={styles.mapWrap}>
@@ -182,14 +193,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     lineHeight: 22,
   },
-  meta: { marginTop: 10, color: colors.accent, fontSize: 14, fontWeight: "500" },
+  meta: { marginTop: 10, color: colors.textMuted, fontSize: 14, fontWeight: "500" },
   card: {
     marginTop: 20,
     backgroundColor: colors.surfaceStrong,
-    borderRadius: radii.xl,
-    padding: 20,
+    borderRadius: radii.xxl,
+    padding: 22,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderGlass,
     ...shadowCard,
   },
   cardTitle: {
@@ -203,8 +214,29 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 28,
     fontWeight: "800",
-    color: colors.cta,
+    color: colors.text,
     letterSpacing: -0.5,
+  },
+  windowBarTrack: {
+    marginTop: 16,
+    height: 8,
+    borderRadius: radii.full,
+    backgroundColor: colors.surfaceInner,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  windowBarFill: {
+    flex: 1,
+    borderRadius: radii.full,
+  },
+  cardInner: {
+    marginTop: 18,
+    backgroundColor: colors.surfaceInner,
+    borderRadius: radii.xl,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   statRow: {
     flexDirection: "row",
@@ -215,7 +247,7 @@ const styles = StyleSheet.create({
   statPill: {
     flex: 1,
     minWidth: "28%",
-    backgroundColor: colors.surface,
+    backgroundColor: colors.statInset,
     borderRadius: radii.md,
     paddingVertical: 12,
     paddingHorizontal: 12,
@@ -244,7 +276,7 @@ const styles = StyleSheet.create({
   mapWrap: {
     marginTop: 22,
     height: 228,
-    borderRadius: radii.xl,
+    borderRadius: radii.xxl,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.mapBorder,

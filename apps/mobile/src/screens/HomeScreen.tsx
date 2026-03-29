@@ -1,4 +1,5 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -23,7 +24,13 @@ import {
 import { computeRecommendation } from "../logic/recommendation";
 import type { RootStackParamList } from "../navigation/types";
 import { loadAllSpots } from "../spots/loadSpots";
-import { colors, radii, shadowCard, shadowCta } from "../theme";
+import {
+  colors,
+  gradientCoastal,
+  radii,
+  shadowCard,
+  shadowCta,
+} from "../theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -33,6 +40,8 @@ const SKILLS: { key: SkillLevel; label: string; hint: string }[] = [
   { key: "advanced", label: "Advanced", hint: "Larger, more powerful swell" },
 ];
 
+const EXPLORE_PILLS = ["Travel", "Lifestyle", "Forecast", "Premium"] as const;
+
 export function HomeScreen({ navigation }: Props) {
   const spots = useMemo(() => loadAllSpots(), []);
   const [skill, setSkill] = useState<SkillLevel>("intermediate");
@@ -41,6 +50,8 @@ export function HomeScreen({ navigation }: Props) {
   const [busy, setBusy] = useState(false);
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
+  const [explorePill, setExplorePill] =
+    useState<(typeof EXPLORE_PILLS)[number]>("Travel");
 
   const countryLabel = useMemo(
     () => SUPPORTED_COUNTRIES.find((c) => c.code === countryCode)?.label ?? "",
@@ -119,13 +130,46 @@ export function HomeScreen({ navigation }: Props) {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.header}>
-          <View style={styles.titleRow}>
-            <View style={styles.titleAccent} />
-            <Text style={styles.title}>NomadSurf</Text>
+          <View style={styles.topBar}>
+            <Text style={styles.brand}>NOMADSURF</Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.waveBtn,
+                pressed && styles.waveBtnPressed,
+              ]}
+              accessibilityLabel="Wave"
+            >
+              <Text style={styles.waveBtnIcon} accessible={false}>
+                ∿
+              </Text>
+            </Pressable>
           </View>
+          <View style={styles.pillRow}>
+            {EXPLORE_PILLS.map((p) => {
+              const on = explorePill === p;
+              return (
+                <Pressable
+                  key={p}
+                  onPress={() => setExplorePill(p)}
+                  style={({ pressed }) => [
+                    styles.explorePill,
+                    on && styles.explorePillOn,
+                    pressed && !on && styles.explorePillPressed,
+                  ]}
+                >
+                  <Text
+                    style={[styles.explorePillText, on && styles.explorePillTextOn]}
+                  >
+                    {p}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={styles.heroTitle}>Find your next wave</Text>
           <Text style={styles.sub}>
-            Pick your country and city from the lists — we match you to the best
-            break in our regional list and today’s best time (local to the spot).
+            Pick your country and city — we match you to the best break in our
+            list and today’s best window (local to the spot).
           </Text>
         </View>
 
@@ -292,15 +336,22 @@ export function HomeScreen({ navigation }: Props) {
         </Modal>
 
         <Pressable
-          style={[styles.cta, busy && styles.btnDisabled]}
+          style={[styles.ctaWrap, busy && styles.btnDisabled]}
           onPress={findSurf}
           disabled={busy}
         >
-          {busy ? (
-            <ActivityIndicator color={colors.ctaText} />
-          ) : (
-            <Text style={styles.ctaText}>Find best surf today</Text>
-          )}
+          <LinearGradient
+            colors={[...gradientCoastal]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.ctaGradient}
+          >
+            {busy ? (
+              <ActivityIndicator color={colors.ctaText} />
+            ) : (
+              <Text style={styles.ctaText}>Find best surf today</Text>
+            )}
+          </LinearGradient>
         </Pressable>
 
         <Text style={styles.footer}>
@@ -320,25 +371,74 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 28,
   },
-  header: { marginBottom: 26 },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  titleAccent: {
-    width: 4,
-    height: 28,
-    borderRadius: 2,
-    backgroundColor: colors.accent,
+  header: { marginBottom: 28 },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  title: {
-    fontSize: 34,
+  brand: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: colors.textMuted,
+    letterSpacing: 3.2,
+  },
+  waveBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceStrong,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadowCard,
+  },
+  waveBtnPressed: { opacity: 0.85 },
+  waveBtnIcon: {
+    fontSize: 22,
+    color: colors.accent,
+    fontWeight: "300",
+    marginTop: 2,
+  },
+  pillRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 20,
+  },
+  explorePill: {
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    borderRadius: radii.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  explorePillPressed: { backgroundColor: colors.surfaceHover },
+  explorePillOn: {
+    backgroundColor: colors.chipOn,
+    borderColor: colors.chipOnBorder,
+  },
+  explorePillText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textMuted,
+  },
+  explorePillTextOn: { color: colors.text },
+  heroTitle: {
+    marginTop: 28,
+    fontSize: 32,
     fontWeight: "800",
     color: colors.text,
-    letterSpacing: -0.8,
+    letterSpacing: -0.9,
+    lineHeight: 38,
   },
   sub: {
     marginTop: 12,
     color: colors.textMuted,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 23,
     fontWeight: "400",
   },
   section: {
@@ -358,11 +458,11 @@ const styles = StyleSheet.create({
   },
   cityLabel: { marginTop: 18 },
   skillShell: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+    backgroundColor: colors.surfaceStrong,
+    borderRadius: radii.xl,
     borderWidth: 1,
-    borderColor: colors.border,
-    padding: 5,
+    borderColor: colors.borderGlass,
+    padding: 6,
     ...shadowCard,
   },
   skillRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
@@ -374,30 +474,27 @@ const styles = StyleSheet.create({
   },
   skillChipPressed: { backgroundColor: colors.surfaceHover },
   skillChipOn: {
-    backgroundColor: colors.accent,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+    backgroundColor: colors.badgeSurf,
+    borderWidth: 1,
+    borderColor: "rgba(74, 222, 128, 0.35)",
   },
   skillLabel: {
     color: colors.textSecondary,
     fontWeight: "600",
     fontSize: 15,
   },
-  skillLabelOn: { color: colors.accentTextOn },
+  skillLabelOn: { color: colors.badgeSurfText, fontWeight: "700" },
   hint: { marginTop: 12, color: colors.textSubtle, fontSize: 14, lineHeight: 20 },
   countrySelect: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: colors.surfaceStrong,
-    borderRadius: radii.md,
-    paddingHorizontal: 16,
-    paddingVertical: 15,
+    borderRadius: radii.lg,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderGlass,
   },
   countrySelectText: {
     color: colors.text,
@@ -411,7 +508,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   countrySelectChevron: {
-    color: colors.accent,
+    color: colors.textMuted,
     fontSize: 11,
     opacity: 0.9,
   },
@@ -422,10 +519,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
   },
   modalCard: {
-    backgroundColor: "#0f1419",
-    borderRadius: radii.xl,
+    backgroundColor: colors.bgElevated,
+    borderRadius: radii.xxl,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderGlass,
     paddingVertical: 6,
     maxHeight: "72%",
     width: "100%",
@@ -462,15 +559,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
   },
-  cta: {
+  ctaWrap: {
     marginTop: 30,
-    backgroundColor: colors.cta,
-    paddingVertical: 17,
-    borderRadius: radii.lg,
-    alignItems: "center",
+    borderRadius: radii.xl,
+    overflow: "hidden",
     ...shadowCta,
   },
-  ctaText: { color: colors.ctaText, fontWeight: "800", fontSize: 17, letterSpacing: -0.2 },
+  ctaGradient: {
+    paddingVertical: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 54,
+  },
+  ctaText: {
+    color: colors.ctaText,
+    fontWeight: "800",
+    fontSize: 17,
+    letterSpacing: -0.2,
+  },
   btnDisabled: { opacity: 0.5 },
   footer: {
     marginTop: 32,
