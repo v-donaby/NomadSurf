@@ -5,7 +5,13 @@ import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { SpotForecastResult } from "@nomadsurf/core";
 import type { RootStackParamList } from "../navigation/types";
-import { colors, gradientWindowBar, radii, shadowCard } from "../theme";
+import {
+  colors,
+  gradientScreen,
+  gradientWindowBar,
+  radii,
+  shadowCard,
+} from "../theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Result">;
 
@@ -56,11 +62,20 @@ export function ResultScreen({ navigation, route }: Props) {
   const region = mapRegionForReferenceAndSpot(referenceLocation, best.spot);
 
   return (
-    <SafeAreaView style={styles.safe} edges={["bottom"]}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
+    <View style={styles.screenRoot}>
+      <LinearGradient
+        colors={[...gradientScreen]}
+        locations={[0, 0.42, 1]}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
+      <SafeAreaView style={styles.safe} edges={["bottom", "left", "right"]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.hero}>
           <Text style={styles.kicker}>Best spot today</Text>
           <Text style={styles.refLine}>
@@ -160,51 +175,70 @@ export function ResultScreen({ navigation, route }: Props) {
           <Text style={styles.backChevron}>‹</Text>
           <Text style={styles.back}>Change location or skill</Text>
         </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bgScreen },
-  scroll: { paddingHorizontal: 22, paddingTop: 8, paddingBottom: 40 },
+  screenRoot: { flex: 1, backgroundColor: "transparent" },
+  safe: { flex: 1, backgroundColor: "transparent" },
+  scroll: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 40,
+  },
   hero: {
     marginBottom: 8,
   },
   kicker: {
-    color: colors.kicker,
+    color: colors.cyanKicker,
     fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 1.4,
   },
   spotName: {
-    marginTop: 14,
+    marginTop: 12,
     fontSize: 30,
-    fontWeight: "800",
+    fontWeight: "600",
     color: colors.text,
     letterSpacing: -0.6,
+    lineHeight: 36,
   },
-  region: { marginTop: 6, color: colors.textMuted, fontSize: 16, fontWeight: "500" },
+  region: {
+    marginTop: 6,
+    color: colors.textSlate300,
+    fontSize: 16,
+    fontWeight: "400",
+  },
   refLine: {
     marginTop: 10,
-    color: colors.textMuted,
-    fontSize: 15,
-    fontWeight: "600",
-    lineHeight: 22,
+    color: colors.textSlate300,
+    fontSize: 14,
+    fontWeight: "400",
+    lineHeight: 21,
   },
-  meta: { marginTop: 10, color: colors.textMuted, fontSize: 14, fontWeight: "500" },
+  meta: {
+    marginTop: 10,
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: "400",
+  },
   card: {
     marginTop: 20,
-    backgroundColor: colors.surfaceStrong,
-    borderRadius: radii.xxl,
-    padding: 22,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: 20,
     borderWidth: 1,
-    borderColor: colors.borderGlass,
+    borderColor: colors.border,
     ...shadowCard,
   },
   cardTitle: {
-    color: colors.kicker,
+    color: colors.cyanKicker,
     fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
@@ -213,7 +247,7 @@ const styles = StyleSheet.create({
   window: {
     marginTop: 12,
     fontSize: 28,
-    fontWeight: "800",
+    fontWeight: "600",
     color: colors.text,
     letterSpacing: -0.5,
   },
@@ -221,7 +255,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     height: 8,
     borderRadius: radii.full,
-    backgroundColor: colors.surfaceInner,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.border,
@@ -233,7 +267,7 @@ const styles = StyleSheet.create({
   cardInner: {
     marginTop: 18,
     backgroundColor: colors.surfaceInner,
-    borderRadius: radii.xl,
+    borderRadius: radii.lg,
     padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
@@ -242,17 +276,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
-    marginTop: 16,
+    marginTop: 0,
   },
   statPill: {
     flex: 1,
     minWidth: "28%",
-    backgroundColor: colors.statInset,
+    backgroundColor: "rgba(0, 0, 0, 0.12)",
     borderRadius: radii.md,
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   statLabel: {
     color: colors.textSubtle,
@@ -269,17 +303,18 @@ const styles = StyleSheet.create({
   },
   rationale: {
     marginTop: 14,
-    color: colors.textMuted,
+    color: colors.textSlate300,
     fontSize: 14,
     lineHeight: 21,
+    fontWeight: "400",
   },
   mapWrap: {
     marginTop: 22,
     height: 228,
-    borderRadius: radii.xxl,
+    borderRadius: radii.xl,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: colors.mapBorder,
+    borderColor: colors.border,
     ...shadowCard,
   },
   map: { flex: 1 },
@@ -287,7 +322,7 @@ const styles = StyleSheet.create({
   runnersTitle: {
     color: colors.text,
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: "600",
     marginBottom: 12,
     letterSpacing: -0.3,
   },

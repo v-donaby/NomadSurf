@@ -4,7 +4,7 @@ import { Platform } from "react-native";
 import type { RootStackParamList } from "./types";
 import { HomeScreen } from "../screens/HomeScreen";
 import { ResultScreen } from "../screens/ResultScreen";
-import { colors } from "../theme";
+import { colors, gradientScreen } from "../theme";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -39,10 +39,10 @@ export function RootNavigator() {
           component={ResultScreen}
           options={{
             title: "Today’s pick",
-            // Opaque header so scroll content (hero + map) never sits under the bar.
             headerTransparent: false,
             headerBlurEffect: undefined,
-            headerStyle: { backgroundColor: colors.bgScreen },
+            headerStyle: { backgroundColor: gradientScreen[0] },
+            contentStyle: { backgroundColor: "transparent" },
           }}
         />
       </Stack.Navigator>
