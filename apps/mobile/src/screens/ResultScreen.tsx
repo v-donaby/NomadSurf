@@ -89,10 +89,7 @@ export function ResultScreen({ navigation, route }: Props) {
           {best.spot.region ? (
             <Text style={styles.region}>{best.spot.region}</Text>
           ) : null}
-          <Text style={styles.meta}>
-            ~{best.distanceKm.toFixed(0)} km from your pick to this break ·
-            Local times at the break
-          </Text>
+          <Text style={styles.meta}>Local times at the break</Text>
         </View>
 
         <View style={styles.card}>
