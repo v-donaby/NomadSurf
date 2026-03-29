@@ -37,7 +37,13 @@ export function RootNavigator() {
         <Stack.Screen
           name="Result"
           component={ResultScreen}
-          options={{ title: "Today’s pick" }}
+          options={{
+            title: "Today’s pick",
+            // Opaque header so scroll content (hero + map) never sits under the bar.
+            headerTransparent: false,
+            headerBlurEffect: undefined,
+            headerStyle: { backgroundColor: colors.bgScreen },
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>
