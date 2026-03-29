@@ -5,7 +5,7 @@ import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { SpotForecastResult } from "@nomadsurf/core";
 import type { RootStackParamList } from "../navigation/types";
-import { colors, gradientCoastal, radii, shadowCard } from "../theme";
+import { colors, gradientWindowBar, radii, shadowCard } from "../theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Result">;
 
@@ -88,7 +88,7 @@ export function ResultScreen({ navigation, route }: Props) {
           </Text>
           <View style={styles.windowBarTrack}>
             <LinearGradient
-              colors={[...gradientCoastal]}
+              colors={[...gradientWindowBar]}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={styles.windowBarFill}

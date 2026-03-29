@@ -1,38 +1,69 @@
 import { Platform } from "react-native";
 
-/** Coastal glass — deep navy base, soft glass surfaces, sky-to-sand accents */
+/**
+ * Coastal glass — matches NomadSurf web reference:
+ * deep ocean blues, cyan highlights, warm sand, frosted cards.
+ */
 export const colors = {
-  bg: "#071525",
-  bgScreen: "#0a192f",
-  bgElevated: "#0f2137",
-  surface: "rgba(148, 163, 184, 0.1)",
-  surfaceHover: "rgba(148, 163, 184, 0.16)",
-  surfaceStrong: "rgba(148, 163, 184, 0.14)",
-  surfaceInner: "rgba(7, 21, 37, 0.55)",
-  statInset: "rgba(2, 12, 27, 0.55)",
-  border: "rgba(255, 255, 255, 0.12)",
-  borderGlass: "rgba(255, 255, 255, 0.18)",
-  borderFocus: "rgba(125, 211, 252, 0.45)",
+  bg: "#07131d",
+  bgScreen: "#07131d",
+  bgElevated: "#102534",
+  surface: "rgba(255, 255, 255, 0.1)",
+  surfaceHover: "rgba(255, 255, 255, 0.14)",
+  surfaceStrong: "rgba(255, 255, 255, 0.1)",
+  surfaceInner: "rgba(2, 6, 23, 0.3)",
+  statInset: "rgba(0, 0, 0, 0.1)",
+  border: "rgba(255, 255, 255, 0.1)",
+  borderGlass: "rgba(255, 255, 255, 0.1)",
+  borderCyan: "rgba(165, 243, 252, 0.1)",
+  borderOrange: "rgba(254, 215, 170, 0.1)",
+  borderFocus: "rgba(165, 243, 252, 0.45)",
   text: "#ffffff",
-  textSecondary: "#cbd5e1",
+  textSecondary: "#e2e8f0",
   textMuted: "#94a3b8",
+  textSlate300: "#cbd5e1",
   textSubtle: "#64748b",
-  accent: "#7dd3fc",
-  accentSoft: "rgba(125, 211, 252, 0.14)",
-  accentTextOn: "#0a192f",
-  kicker: "#94a3b8",
-  badgeSurf: "rgba(74, 222, 128, 0.22)",
-  badgeSurfText: "#bbf7d0",
-  chipOn: "rgba(125, 211, 252, 0.2)",
-  chipOnBorder: "rgba(125, 211, 252, 0.35)",
-  cta: "#7dd3fc",
-  ctaText: "#0a192f",
-  overlay: "rgba(2, 12, 27, 0.72)",
-  mapBorder: "rgba(255, 255, 255, 0.14)",
+  cyanBrand: "rgba(165, 243, 252, 0.7)",
+  cyanKicker: "rgba(207, 250, 254, 0.7)",
+  cyanSoft: "rgba(207, 250, 254, 0.95)",
+  chipText: "rgba(236, 254, 255, 0.9)",
+  accent: "#a5f3fc",
+  accentSoft: "rgba(165, 243, 252, 0.12)",
+  accentTextOn: "#07131d",
+  kicker: "rgba(207, 250, 254, 0.7)",
+  badgeSurf: "rgba(110, 231, 183, 0.2)",
+  badgeSurfMuted: "rgba(209, 250, 229, 0.8)",
+  badgeSurfText: "rgba(209, 250, 229, 1)",
+  badgeSurfLabel: "rgba(209, 250, 229, 0.8)",
+  cta: "#a5f3fc",
+  ctaText: "#07131d",
+  overlay: "rgba(2, 12, 27, 0.75)",
+  mapBorder: "rgba(255, 255, 255, 0.1)",
+  orangeKicker: "rgba(255, 237, 213, 0.7)",
 };
 
-/** Horizontal gradient: sky blue → warm sand (progress bars, primary CTA) */
+/** Simulates reference radial (lighter at top): #234b63 → #102534 → #07131d */
+export const gradientScreen = ["#234b63", "#102534", "#07131d"] as const;
+
+/** Featured card wash: cyan / transparent / warm */
+export const gradientCardWash = [
+  "rgba(103, 232, 249, 0.12)",
+  "rgba(255, 255, 255, 0.02)",
+  "rgba(253, 186, 116, 0.12)",
+] as const;
+
+/** Best-window bar: cyan-300 → sky-300 → orange-200 */
+export const gradientWindowBar = ["#67e8f9", "#7dd3fc", "#fdba74"] as const;
+
+/** Primary CTA / emphasis strip */
 export const gradientCoastal = ["#38bdf8", "#fcd9bd"] as const;
+
+/** Footer “theme” panel: sand → frost → cyan */
+export const gradientFooterPanel = [
+  "rgba(254, 215, 170, 0.15)",
+  "rgba(255, 255, 255, 0.1)",
+  "rgba(165, 243, 252, 0.1)",
+] as const;
 
 export const radii = {
   sm: 12,
@@ -48,18 +79,18 @@ export const shadowCard =
     ios: {
       shadowColor: "#020617",
       shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.35,
+      shadowOpacity: 0.4,
       shadowRadius: 24,
     },
-    default: { elevation: 6 },
+    default: { elevation: 8 },
   }) ?? {};
 
 export const shadowCta =
   Platform.select({
     ios: {
-      shadowColor: "#38bdf8",
+      shadowColor: "#67e8f9",
       shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.3,
+      shadowOpacity: 0.28,
       shadowRadius: 16,
     },
     default: { elevation: 5 },
